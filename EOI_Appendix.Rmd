@@ -79,7 +79,7 @@ knitr::opts_chunk$set(
   message = FALSE
 )
 
-source(here::here("R", "funcs.R"))
+source(here::here("R", "funcs_sim.R"))
 
 set.seed(2022)
 ```
@@ -104,37 +104,11 @@ Dependent variables:
 
 Let us simulate two data sets for behavioral choices and response times separately with the above design of 30 participants for each group. For simplicity, the average performance for each participant was simulated directly. Please refer to the codes in the open materials for detailed simulation procedures. Table \@ref(tab:simu-true) displays the ground truth for each condition, and the structure of the simulated data is as follows:
 
-```{r general settings for simulation}
-Groups <- c("train", "control") # Between-subject factor
-Test <- c("pre_test", "post_test") # Within-subject factor
-
-N_subj <- 30 # number of participant in each group
-
-rho <- 0.5  # correlation between pre- and post-tests
-# construct the variance-covariance matrix
-C <- matrix(rho, nrow = 2, ncol = 2)
-diag(C) <- 1
-```
-
-```{r simulating d data}
-d_pre <- 2.5 # mean of pre-test performance
-d_delta <- c(0.4, 0.9) + d_pre # means of post-test performance
-
-d_sd <- 0.5   # the same standard deviation were used
-
-d_control <- mvtnorm::rmvnorm(N_subj, c(d_pre, d_delta[1]), sigma = C*d_sd^2)
-d_train <- mvtnorm::rmvnorm(N_subj, c(d_pre, d_delta[2]), sigma = C*d_sd^2)
-
-df_d <- rbind(d_control, d_train) %>% 
-  as_tibble() %>% 
-  transmute(Subj = 1:(N_subj*length(Groups)),
-            Group = rep(Groups, each = N_subj),
-            pre = V1,
-            post = V2) %>% 
-  pivot_longer(c(pre, post), names_to = "Test", values_to = "d")
-
-# save the simulated data 
-save(df_d, file = file.path("simulation", "data_simu_d.rds"))
+```{r}
+d_pre <- 2.5
+d_delta <- c(0.4, 0.9) # control, train
+d_post <- d_pre + d_delta
+df_d <- sim_train(d_pre, d_delta, std=0.5, dvname="d")
 ```
 
 ```{r}
@@ -142,25 +116,10 @@ str(df_d)
 ```
 
 ```{r simulating rt data}
-rt_pre <- 6.4 # mean of pre-test performance (rt: 601)
-rt_delta <- c(-0.3, -0.3) + rt_pre # means of post-test performance
-
-rt_sd <- 0.1   # the same standard deviation/variances were used
-
-rt_control <- mvtnorm::rmvnorm(N_subj, c(rt_pre, rt_delta[1]), sigma = C*rt_sd^2)
-rt_train <- mvtnorm::rmvnorm(N_subj, c(rt_pre, rt_delta[2]), sigma = C*rt_sd^2)
-
-df_rt <- rbind(rt_control, rt_train) %>% 
-  as_tibble() %>% 
-  transmute(Subj = 1:(N_subj*length(Groups)),
-            Group = rep(Groups, each = N_subj),
-            pre = V1,
-            post = V2) %>% 
-  pivot_longer(c(pre, post), names_to = "Test", values_to = "logrt") %>% 
-  mutate(rt = exp(logrt))
-
-# save the simulated data 
-save(df_rt, file = file.path("simulation", "data_simu_rt.rds"))
+rt_pre <- 6.4
+rt_delta <- c(-0.3, -0.3)
+rt_post <- rt_pre + rt_delta 
+df_rt <- sim_train(rt_pre, rt_delta, std=0.1, dvname="logrt", logrt=TRUE)
 ```
 
 ```{r}

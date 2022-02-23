@@ -40,75 +40,105 @@ sim_train <- function(pre, delta, std, dvname, logrt=FALSE, N_subj=30, rho=0.5, 
   return(df_sim)
 }
 
-
 ### Simulating HBER for the hypothetical training study
-sim_hber_null <- function (N_subj = 30, N_iter = 1000, thealpha = 0.05, 
-                           seed = 2022, file_cache = NULL) {
+sim_train_null <- function (iter = 1000, N_subj = 30, N_core = 2, 
+                           file_cache = NULL) {
+  # This function simulates data, performs ANOVA, and records the p-values for 
+  # one simple effect (post-test vs. pre-test in the training group) and the 
+  # two-way interaction (performance increase in training group relative to the
+  # control group).
   
+  # iter: iteration number for each sample size
+  # N_subj: sample size for each group.
+  # N_core: number of cores to run the simulation
+  # file_cache: file name of the cache file. If NULL, no file will be cached.
+  
+  # Simulation for one iteration
+  sim_hber_single <- function(N_s) {
+    # simulate null data for d
+    df_d <- sim_train(pre=2.8, delta=c(0,0), std=0.5, dvname="d", 
+                      logrt=F, N_subj=N_s, rho=0.5, seed=NULL)
+    
+    # simulate null data for logrt (rt)
+    df_rt <- sim_train(pre=6.4, delta=c(0,0), std=0.1, dvname="logrt", 
+                       logrt=T, N_subj=N_s, rho=0.5, seed=NULL)
+    
+    # ANOVA for d
+    d_aov <- aov_4(d ~ Group * Test + (Test | Subj), df_d)
+    d_emm <- emmeans(d_aov, ~ Group + Test)
+    
+    df_d_simp <- as_tibble(contrast(d_emm, "revpairwise", by="Group")[2])
+    p_d_simp <- df_d_simp[["p.value"]] # the simple effect
+    df_d_inter <- as_tibble(contrast(d_emm, interaction="revpairwise"))
+    p_d_inter <- df_d_inter[["p.value"]] # the interaction
+    
+    # ANOVA for logrt
+    rt_aov <- aov_4(logrt ~ Group * Test + (Test | Subj), df_rt)
+    rt_emm <- emmeans(rt_aov, ~ Group + Test)
+    
+    df_rt_simp <- as_tibble(contrast(rt_emm, "revpairwise", by="Group")[2])
+    p_rt_simp <- df_rt_simp[["p.value"]] # the simple effect
+    df_rt_inter <- as_tibble(contrast(rt_emm, interaction="revpairwise"))
+    p_rt_inter <- df_rt_inter[["p.value"]] # the interaction
+    
+    rawp <- tibble(N_subj = N_s,
+                   p_d_simple = p_d_simp,
+                   p_d_inter = p_d_inter,
+                   p_rt_simple = p_rt_simp,
+                   p_rt_inter = p_rt_inter)
+    return(rawp)
+  }
+  
+  # parallel simulation
   if (!is.null(file_cache) && file.exists(as.character(file_cache))){
-    out <- read_rds(file_cache)
-    
+    df_null <- read_rds(file_cache)
   } else {
+    # set parallel processing
+    Ns_iter <- rep(N_subj, times=iter)
+    ls_tibble <- pbapply::pblapply(Ns_iter, sim_hber_single, cl=N_core)
     
-    p_d_simp <- rep(NaN, N_iter)
-    sig_d_simp <- rep(NaN, N_iter)
-    p_d_inter <- rep(NaN, N_iter)
-    sig_d_inter <- rep(NaN, N_iter)
-    
-    p_rt_simp <- rep(NaN, N_iter)
-    sig_rt_simp <- rep(NaN, N_iter)
-    p_rt_inter <- rep(NaN, N_iter)
-    sig_rt_inter <- rep(NaN, N_iter)
-    
-    conclusion <- rep(NaN, N_iter)
-    
-    # Each simulation
-    for (i in 1:N_iter) {
-      # simulate null data for d
-      df_d <- sim_train(pre=2.8, delta=c(0,0), std=0.5, dvname="d", 
-                        logrt=F, N_subj=N_subj, rho=0.5, seed=seed+i)
-      
-      # simulate null data for logrt (rt)
-      df_rt <- sim_train(pre=6.4, delta=c(0,0), std=0.1, dvname="logrt", 
-                         logrt=T, N_subj=N_subj, rho=0.5, seed=seed+i)
-      
-      # ANOVA for d
-      d_aov <- aov_4(d ~ Group * Test + (Test | Subj), df_d)
-      d_emm <- emmeans(d_aov, ~ Group + Test)
-      
-      df_d_simp <- as_tibble(contrast(d_emm, "revpairwise", by="Group")[2])
-      p_d_simp[i] <- df_d_simp[["p.value"]]
-      sig_d_simp[i] <- p_d_simp[i] < thealpha
-      
-      df_d_inter <- as_tibble(contrast(d_emm, interaction="revpairwise"))
-      p_d_inter[i] <- df_d_inter[["p.value"]]
-      sig_d_inter[i] <- p_d_inter[i] < thealpha
-      
-      # ANOVA for logrt
-      rt_aov <- aov_4(logrt ~ Group * Test + (Test | Subj), df_rt)
-      rt_emm <- emmeans(rt_aov, ~ Group + Test)
-      
-      df_rt_simp <- as_tibble(contrast(rt_emm, "revpairwise", by="Group")[2])
-      p_rt_simp[i] <- df_rt_simp[["p.value"]]
-      sig_rt_simp[i] <- p_rt_simp[i] < thealpha
-      
-      df_rt_inter <- as_tibble(contrast(rt_emm, interaction="revpairwise"))
-      p_rt_inter[i] <- df_rt_inter[["p.value"]]
-      sig_rt_inter[i] <- p_rt_inter[i] < thealpha
-      
-      # EOI
-      conclusion[i] <- (sig_d_simp[i] & sig_d_inter[i]) | 
-        (sig_rt_simp[i] & sig_rt_inter[i])
-    }
-    
-    out <- tibble(iteration = 1:N_iter, conclusion,
-                  p_d_simp, sig_d_simp, p_d_inter, sig_d_inter,
-                  p_rt_simp, sig_rt_simp, p_rt_inter, sig_rt_inter)
+    df_null <- reduce(ls_tibble, rbind) %>% 
+      dplyr::mutate(iter=1:n())
     
     if (!is.null(file_cache)){
-      write_rds(out, file=file_cache)
+      write_rds(df_null, file=file_cache)
     }
   }
   
-  return(out)
+  return(df_null)
+}
+
+
+### Apply alpha to df
+sim_train_cber <- function (df_sim, alpha=.05, disp=TRUE) {
+  # function to calculate the Type I error rate. 
+  
+  # df_sim: dataframe obtained from sim_train_null
+  # alpha: alpha level used to calculate the Type I error rate.
+  # disp: if true, the output will be a wide format. If false, it will be long.
+  
+  df_sig <- df_sim %>% 
+    mutate(alpha = alpha,
+           sig_d_simple = p_d_simple <= alpha, # apply alpha
+           sig_d_inter = p_d_inter <= alpha, # apply alpha
+           sig_rt_simple = p_rt_simple <= alpha, # apply alpha
+           sig_rt_inter = p_rt_inter <= alpha, # apply alpha
+           sig_d_both = sig_d_simple * sig_d_inter, # whether both are sig for d
+           sig_rt_both = sig_rt_simple * sig_rt_inter, # whether both are sig for rt
+           sig_d_or_rt = sig_d_both | sig_rt_both) %>% # EOI
+    select(N_subj, starts_with("sig_")) %>% 
+    pivot_longer(starts_with("sig_"), names_to = "effects", values_to = "isSig") %>% 
+    group_by(N_subj, effects) %>% 
+    summarize(N_iter = n(),
+              N_sig = sum(isSig),
+              Type_I = mean(isSig),
+              .groups="keep")
+  
+  if (disp){
+    df_sig <- df_sig %>% 
+      select(-c(N_sig)) %>% 
+      pivot_wider(c(N_subj, N_iter), names_from = "effects", values_from = "Type_I")
+  }
+  
+  return(df_sig)
 }

@@ -88,21 +88,23 @@ set.seed(2022)
 
 # (Pre-)specifying effects of interest in practice
 
-## Introduction to the hypothetical study
+## The hypothetical study
 
 The aim of this hypothetical training study was to test whether the training protocol is effective in improving participants' ability of recognizing other-race faces. Please refer to the main text for more details. The specific experimental design is as followings:
 
 Independent variables:
+
 - 2 (Group: `train` vs. `control`; between-subject factor)
 - 2 (Test: `pre-` vs. `post-test`; within-subject factor)
 
 Dependent variables:
+
 - Behavioral choices (analyzed with sensitivity _d_'; `d`)
-- (correct) Response times (analyzed with log-normal transformation; `rt`)
+- (correct) Response times (RT, analyzed with log-normal transformation; `logrt`)
 
 ## Data simulation
 
-Let us simulate two data sets for behavioral choices and response times separately with the above design of 30 participants for each group. For simplicity, the average performance for each participant was simulated directly. Please refer to the codes in the open materials for detailed simulation procedures. Table \@ref(tab:simu-true) displays the ground truth for each condition, and the structure of the simulated data is as follows:
+Two data sets were simulated for behavioral choices and response times separately. There were 30 participants in each group. For simplicity, the average performance for each participant was simulated directly. Please refer to the codes in the open materials for detailed simulation procedures. Table \@ref(tab:simu-true) displays the ground truth for each condition, and the structure of the simulated data is as follows:
 
 ```{r}
 d_pre <- 2.5
@@ -111,17 +113,19 @@ d_post <- d_pre + d_delta
 df_d <- sim_train(d_pre, d_delta, std=0.5, dvname="d")
 ```
 
+The structure of the simulated data _d_' is:
 ```{r}
 str(df_d)
 ```
 
 ```{r simulating rt data}
-rt_pre <- 6.4
-rt_delta <- c(-0.3, -0.3)
-rt_post <- rt_pre + rt_delta 
-df_rt <- sim_train(rt_pre, rt_delta, std=0.1, dvname="logrt", logrt=TRUE)
+logrt_pre <- 6.4
+logrt_delta <- c(-0.3, -0.3)
+logrt_post <- logrt_pre + logrt_delta 
+df_rt <- sim_train(logrt_pre, logrt_delta, std=0.1, dvname="logrt", logrt=TRUE)
 ```
 
+The structure of the simulated data RT is:
 ```{r}
 str(df_rt)
 ```
@@ -130,8 +134,8 @@ str(df_rt)
 tibble(Test = c("pre-test", "post-test"),
        d_control = c(d_pre, d_delta[1]),
        d_train = c(d_pre, d_delta[2]),
-       rt_control = c(round(exp(rt_pre)), round(exp(rt_delta[1]))),
-       rt_train = c(round(exp(rt_pre)), round(exp(rt_delta[2])))) %>% 
+       rt_control = c(round(exp(logrt_pre)), round(exp(logrt_delta[1]))),
+       rt_train = c(round(exp(logrt_pre)), round(exp(logrt_delta[2])))) %>% 
   apa_table(caption='The ground truth for each condition.',
             note='Population parameters used to simulate data for the hypothetical training study.')
 ```
@@ -140,6 +144,123 @@ tibble(Test = c("pre-test", "post-test"),
 
 As discussed in the main text, the EOI for concluding that the training is effective is: ($d^{'}_{post\_train} > d^{'}_{pre\_train}$ and $d^{'}_{post\_train-pre\_train} > d^{'}_{post\_control-pre\_control}$) or ($rt_{post\_train} < rt_{pre\_train}$ and $rt_{post\_train-pre\_train} < rt_{post\_control-pre\_control}$). 
 
+
+## Data analysis
+
+The alpha level of 0.05 would be used at the single test level for all the single tests, and, therefore, the Conclusion-based Type I Error Rate (CBER) is not higher than 0.05 (see Appendix C).  
+
+### Sensitivity d'
+
+A 2 $\times$ 2 mixed-ANOVA was first performed on sensitivity _d_' with `library(afex)`:
+
+```{r echo=TRUE}
+d_aov <- aov_4(d ~ Group * Test + (Test | Subj), df_d)
+```
+
+The results are not displayed as none of these effects could test the directional effects  specified in EOI. Thus, we use `library(emmeans)` to, first, test one of the simple effects (i.e., post-test vs. pre-test in the training group):
+
+```{r echo=TRUE}
+d_emm <- emmeans(d_aov, ~ Group + Test)
+summary(contrast(d_emm, "revpairwise", by="Group")[2], side = ">", infer=T)
+```
+
+The above result shows that the _d_' of the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group):
+
+```{r echo=TRUE}
+summary(contrast(d_emm, interaction="revpairwise"), side = ">", infer=T)
+```
+This result shows that the increase of _d_' from pre- to post-test was significantly greater in the training group relative to the control group. 
+
+### Correct response times
+
+A similar 2 $\times$ 2 mixed-ANOVA was performed on correct response times (RT) with `library(afex)`:
+
+```{r echo=TRUE}
+logrt_aov <- aov_4(logrt ~ Group * Test + (Test | Subj), df_rt)
+```
+
+Next, we test one of the simple effects (i.e., post-test vs. pre-test in the training group):
+
+```{r echo=TRUE}
+logrt_emm <- emmeans(logrt_aov, ~ Group + Test)
+summary(contrast(logrt_emm, "revpairwise", by="Group")[2], side = "<", infer=T)
+```
+
+This result shows that RT in post-test is shorter than the pre-test in the training group. Next, we examined the two-way interaction (i.e., the decrease of RT in the training group relative to the control group):
+
+```{r echo=TRUE}
+summary(contrast(logrt_emm, interaction="revpairwise"), side = "<", infer=T)
+```
+The magnitude of the RT decrease was not significantly greater in the training relative to the control group. Therefore, the RT results did not provide the evidence that the training is effective. Notably, this result does not suggest that the training protocol was not effective, either.
+
+In summary, with both the results of _d_' and RT as specified in EOI, we may claim that the training protocol is effective.
+
+
+# (Re-)analyze the simulated data with multilevel models
+
+Specifying EOI is not specific to any statistical method. Appendix A demonstrated how to employ ANOVA to inspect the EOI. In this appendix, multilevel models (also known as linear-mixed effects models or hierarchical models) are used to inspect the same EOI with the same simulated data set. Following the analysis in Appendix A, behavioral choices were also analyzed with signal detection theory (sensitivity _d_') and correct responses times were analyzed with log-normal transformation. Of note, it is typically more beneficial to perform multilevel models on the trial-level data and incorporate the full random-effect structure. For simplicity, multilevel models employed in this appendix will only incorporate the by-subject random intercept and be performed on the condition means for each participant. Anyhow, this simplification would not invalidate the following demonstration. Please refer to the open materials of @jinTwoFacesHolistic for more appropriate applications of multilevel models with signal detection theory and log-transformation.
+
+## Sensitivity d'
+
+The same EOI would be inspected here: (1) _d_' in the post- relative to the pre-test in the training group, and (2) the increase of _d_' in the training group relative to the control group. It happened that these two effects could be tested with the default dummy contrast coding in R when the default level in each factor was set appropriately.
+
+```{r}
+# set the level order for each factor
+df_d_lmm <- df_d %>% 
+  mutate(Test = factor(Test, levels=c("post", "pre")), # pre is the first level 
+         Group = factor(Group, levels=c("train", "control"))) # control is the first level
+```
+
+The hierarchical model is as follows:
+```{r, echo=T}
+d_lmm <- lmer(d ~ Group * Test + (1 | Subj), data = df_d_lmm)
+round(summary(d_lmm)$coefficients, 3)
+```
+
+These results suggest that in the training group, the _d_' in the pre-test was worse than that in the post-test (results of `Testpre`) and the increase of _d_' in the training group was greater than the control group (results of `Groupcontrol:Testpre`). Noteworthy that these results (mainly the p-values) were from two-sided tests. Since the effects in EOI were directional, we might use one-sided instead of two-sided tests. For example, we might use a t-value of 1.65 instead of 1.96 as the threshold to claim statistical significance. Alternatively, `library(emmeans)` could be used to perform the one-side tests, similar to Appendix A. 
+
+```{r echo=TRUE}
+d_lmm_emm <- emmeans(d_lmm, ~ Group + Test)
+summary(contrast(d_lmm_emm, "pairwise", by="Group")[1], side = ">", infer=T)
+```
+
+The above result shows that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group):
+
+```{r echo=TRUE}
+summary(contrast(d_lmm_emm, interaction="pairwise"), side = ">", infer=T)
+```
+
+This result showed that the increase of _d_' in the training group was significantly greater than that in the control group.
+
+## Correct Response times
+
+```{r}
+df_rt_lmm <- df_rt %>% 
+  mutate(Test = factor(Test, levels=c("post", "pre")), # pre is the first level 
+         Group = factor(Group, levels=c("train", "control"))) # control is the first level
+```
+
+The similar multilevel model for RT is as followings:
+
+```{r, echo=T}
+logrt_lmm <- lmer(logrt ~ Group * Test + (1 | Subj), data = df_rt_lmm)
+round(summary(logrt_lmm)$coefficients, 3)
+```
+
+Note that the above results were from two-sided tests. Therefore, we used `library(emmeans)` to perform the one-side tests. 
+
+```{r echo=TRUE}
+logrt_lmm_emm <- emmeans(logrt_lmm, ~ Group + Test)
+summary(contrast(logrt_lmm_emm, "pairwise", by="Group")[1], side = "<", infer=T)
+```
+
+This result shows that the _d_' of the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction:
+
+```{r echo=TRUE}
+summary(contrast(logrt_lmm_emm, interaction="pairwise"), side = "<", infer=T)
+```
+
+We failed to observe the evidence that the decrease of RT in the training group was larger than the control group. With results of both _d_' and RT, we may claim that the training was effective. 
 
 # Conclusion-based Type I error rate in the hypothetical training study
 

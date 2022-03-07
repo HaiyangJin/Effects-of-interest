@@ -1,0 +1,390 @@
+---
+title             : "Figures used in the main texts"
+
+author: 
+  - name: "Haiyang Jin"
+    affiliation: ""
+    address: ""
+    email: "haiyang.jin@outlook.com"
+    corresponding: yes
+    
+affiliation:
+  - id            : ""
+    institution   : "New York University Abu Dhabi"
+  
+authornote        : |
+  This is the code for creating the Figures in the main texts.
+        
+date: "`r format(Sys.time(), '%d-%m-%Y')`"
+
+---
+
+```{r setup, appendix, include=FALSE}
+## load libraries
+library(knitr)
+library(tidyverse)
+library(afex)
+library(emmeans)
+library(ggpubr)
+library(here)
+library(papaja)
+
+theme_set(theme_apa())
+
+# set global chunk options, put figures into folder
+options(warn=-1, replace.assign=TRUE)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	include = TRUE,
+	# warning = FALSE,
+	fig.align = "center",
+	fig.path = "figures/figure-",
+	fig.show = "hold",
+	fig.width=7, fig.asp =0.618,
+	width = 1800, 
+	message = FALSE
+)
+
+source(here("R", "funcs_sim.R"))
+```
+
+# Figure 1
+
+## Figure 1A
+The (special) result pattern cannot be used to claim the training effectiveness when the interaction was significant but that simple effect was not.
+
+```{r}
+df_1a <- sim_train(c(2.6, 2.4), c(-0.15, 0.15), std=0.5, dvname="d")
+```
+
+```{r}
+d_aov_1a <- aov_4(d ~ Group * Test + (Test | Subj), df_1a)
+(d_emm_1a <- emmeans(d_aov_1a, ~ Group + Test))
+```
+
+```{r}
+(d_1a_sim <- summary(contrast(d_emm_1a, "revpairwise", by="Group")[2], side = ">", infer=T))
+```
+
+
+```{r}
+(d_1a_inter <- summary(contrast(d_emm_1a, interaction="revpairwise"), side = ">", infer=T))
+```
+
+```{r}
+plot_1a <- as_tibble(d_emm_1a) %>% 
+  mutate(Test = fct_recode(Test, `pre-test`="pre", `post-test`="post")) %>% 
+  ggplot(aes(Test, emmean, color=Group, group=Group)) +
+  geom_point(size = 2, position=position_dodge(.1)) +
+  geom_line(aes(linetype=Group), size = 1, position=position_dodge(.1)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=0.15,
+                position=position_dodge(.1), show.legend=F) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(y=expression("Sensitivity"~italic("d'")), 
+       color="Group", linetype="Group") +
+  geom_text(label="textstyle('simple effect:')~italic('p')~'='~.12", x=.5, y = 1, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('interaction:')~italic('p')~'='~.03", x=.5, y = 0.7, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  theme(legend.position=c(.5, .0975),
+        legend.direction = "horizontal",
+        legend.margin = margin(t = 0, unit='cm'),
+        axis.title.x = element_blank()) +
+  NULL
+```
+
+```{r}
+plot_1a
+```
+
+
+## Figure 1B
+The result patterns of the simulation data set for _d_' and RT separately.
+
+### d
+
+```{r}
+df_d_1b <- sim_train(2.5, c(0.4, 0.9), std=0.5, dvname="d")
+```
+
+```{r}
+d_aov_1b <- aov_4(d ~ Group * Test + (Test | Subj), df_d_1b)
+(d_emm_1b <- emmeans(d_aov_1b, ~ Group + Test))
+```
+
+```{r}
+(d_1b_sim <- summary(contrast(d_emm_1b, "revpairwise", by="Group")[2], side = ">", infer=T))
+```
+
+
+```{r}
+(d_1b_inter <- summary(contrast(d_emm_1b, interaction="revpairwise"), side = ">", infer=T))
+```
+
+```{r}
+plot_1b_d <- as_tibble(d_emm_1b) %>% 
+  mutate(Test = fct_recode(Test, `pre-test`="pre", `post-test`="post")) %>% 
+  ggplot(aes(Test, emmean, color=Group, group=Group)) +
+  geom_point(size = 2, position=position_dodge(.1)) +
+  geom_line(aes(linetype=Group), size = 1, position=position_dodge(.1)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=0.15,
+                position=position_dodge(.1), show.legend=F) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(x="Test", y=expression("Sensitivity"~italic("d'")), 
+       color="Group", linetype="Group") +
+  geom_text(label="textstyle('simple effect:')~italic('p')~'<'~.001", x=.5, y = 1, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('interaction:')~italic('p')~'<'~.001", x=.5, y = 0.7, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  theme(legend.position=c(.5, .0975),
+        legend.direction = "horizontal",
+        legend.margin = margin(t = 0, unit='cm'),
+        axis.title.x = element_blank()) +
+  NULL
+```
+
+```{r}
+plot_1b_d
+```
+
+### RT
+
+```{r simulating rt data}
+df_rt_1b <- sim_train(6.4, c(-0.1, -0.1), std=0.1, dvname="logrt", logrt=TRUE)
+```
+
+
+```{r}
+rt_aov_1b <- aov_4(logrt ~ Group * Test + (Test | Subj), df_rt_1b)
+(rt_emm_1b <- emmeans(rt_aov_1b, ~ Group + Test))
+```
+
+```{r}
+(rt_1b_sim <- summary(contrast(rt_emm_1b, "revpairwise", by="Group")[2], side = "<", infer=T))
+```
+
+
+```{r}
+(rt_1b_inter <- summary(contrast(rt_emm_1b, interaction="revpairwise"), side = "<", infer=T))
+```
+
+```{r}
+plot_1b_rt <- as_tibble(rt_emm_1b) %>% 
+  mutate(Test = fct_recode(Test, `pre-test`="pre", `post-test`="post")) %>% 
+  mutate(emmean = exp(emmean),
+         lower.CL = exp(lower.CL),
+         upper.CL = exp(upper.CL)) %>% 
+  ggplot(aes(Test, emmean, color=Group, group=Group)) +
+  geom_point(size = 2, position=position_dodge(.1)) +
+  geom_line(aes(linetype=Group), size = 1, position=position_dodge(.1)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=0.15,
+                position=position_dodge(.1), show.legend=F) +
+  coord_cartesian(ylim = c(450, 650)) +
+  labs(x="Test", y="Correct response times (ms)", 
+       color="Group", linetype="Group") +
+  geom_text(label="textstyle('simple effect:')~italic('p')~'<'~.001", x=.5, y = 500, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('interaction:')~italic('p')~ '=' ~.32", x=.5, y = 485, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  theme(legend.position="none",
+        axis.title.x = element_blank()) +
+  NULL
+```
+
+```{r}
+plot_1b_rt
+```
+
+### Combination
+```{r}
+plot_1b <- ggarrange(plot_1b_d, plot_1b_rt)
+plot_1b
+```
+
+
+## Figure 1C
+The three scenarios where both that simple effect and interaction were significant.
+
+### Scenario 1
+
+```{r}
+df_1c1 <- sim_train(2.5, c(0.25, 0.6), std=0.5, dvname="d")
+```
+
+```{r}
+d_aov_1c1 <- aov_4(d ~ Group * Test + (Test | Subj), df_1c1)
+(d_emm_1c1 <- emmeans(d_aov_1c1, ~ Group + Test))
+```
+
+```{r}
+(d_1c1_sim <- summary(contrast(d_emm_1c1, "revpairwise", by="Group"), side = "=", infer=T))
+```
+
+
+```{r}
+(d_1c1_inter <- summary(contrast(d_emm_1c1, interaction="revpairwise"), side = "=", infer=T))
+```
+
+```{r}
+plot_1c1 <- as_tibble(d_emm_1c1) %>% 
+  mutate(Test = fct_recode(Test, `pre-test`="pre", `post-test`="post")) %>% 
+  ggplot(aes(Test, emmean, color=Group, group=Group)) +
+  geom_point(size = 2, position=position_dodge(.1)) +
+  geom_line(aes(linetype=Group), size = 1, position=position_dodge(.1)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=0.15,
+                position=position_dodge(.1), show.legend=F) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(x="Test", y=expression("Sensitivity"~italic("d'")), 
+       color="Group", linetype="Group") +
+  geom_text(label="simple~effect[' control']:italic('p')~'='~.005", x=.5, y = 1.3, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('simple effect')[' train']:~italic('p')~'<'~.001", x=.5, y = 1, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('interaction:')~italic('p')~'=' ~.023", x=.5, y = 0.7, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  theme(legend.position="none", #c(.5, .0975),
+        legend.direction = "horizontal",
+        legend.margin = margin(t = 0, unit='cm'),
+        axis.title.x = element_blank()) +
+  NULL
+```
+
+```{r}
+plot_1c1
+```
+
+
+### Scenario 2
+
+```{r}
+df_1c2 <- sim_train(2.5, c(0, 0.6), std=0.5, dvname="d")
+```
+
+```{r}
+d_aov_1c2 <- aov_4(d ~ Group * Test + (Test | Subj), df_1c2)
+(d_emm_1c2 <- emmeans(d_aov_1c2, ~ Group + Test))
+```
+
+```{r}
+(d_1c2_sim <- summary(contrast(d_emm_1c2, "revpairwise", by="Group"), side = "=", infer=T))
+```
+
+
+```{r}
+(d_1c2_inter <- summary(contrast(d_emm_1c2, interaction="revpairwise"), side = "=", infer=T))
+```
+
+```{r}
+plot_1c2 <- as_tibble(d_emm_1c2) %>% 
+  mutate(Test = fct_recode(Test, `pre-test`="pre", `post-test`="post")) %>% 
+  ggplot(aes(Test, emmean, color=Group, group=Group)) +
+  geom_point(size = 2, position=position_dodge(.1)) +
+  geom_line(aes(linetype=Group), size = 1, position=position_dodge(.1)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=0.15,
+                position=position_dodge(.1), show.legend=F) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(x="Test", y=expression("Sensitivity"~italic("d'")), 
+       color="Group", linetype="Group") +
+  geom_text(label="textstyle('simple effect')[' control']:italic('p')~'='~textstyle('.90')", x=.5, y = 1.3, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('simple effect')[' train']:~italic('p')~'<'~.001", x=.5, y = 1, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('interaction:')~italic('p')~'<' ~.001", x=.5, y = 0.7, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  theme(legend.position = c(.5, .0975),
+        legend.direction = "horizontal",
+        legend.margin = margin(t = 0, unit='cm'),
+        axis.title.x = element_blank()) +
+  NULL
+```
+
+```{r}
+plot_1c2
+```
+
+
+### Scenario 3
+
+```{r}
+df_1c3 <- sim_train(2.5, c(-0.2, 0.6), std=0.5, dvname="d")
+```
+
+```{r}
+d_aov_1c3 <- aov_4(d ~ Group * Test + (Test | Subj), df_1c3)
+(d_emm_1c3 <- emmeans(d_aov_1c3, ~ Group + Test))
+```
+
+```{r}
+(d_1c3_sim <- summary(contrast(d_emm_1c3, "revpairwise", by="Group"), side = "=", infer=T))
+```
+
+
+```{r}
+(d_1c3_inter <- summary(contrast(d_emm_1c3, interaction="revpairwise"), side = "=", infer=T))
+```
+
+```{r}
+plot_1c3 <- as_tibble(d_emm_1c3) %>% 
+  mutate(Test = fct_recode(Test, `pre-test`="pre", `post-test`="post")) %>% 
+  ggplot(aes(Test, emmean, color=Group, group=Group)) +
+  geom_point(size = 2, position=position_dodge(.1)) +
+  geom_line(aes(linetype=Group), size = 1, position=position_dodge(.1)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=0.15,
+                position=position_dodge(.1), show.legend=F) +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(x="Test", y=expression("Sensitivity"~italic("d'")), 
+       color="Group", linetype="Group") +
+  geom_text(label="textstyle('simple effect')[' control']:italic('p')~'='~.037", x=.5, y = 1.3, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('simple effect')[' train']:~italic('p')~'<'~.001", x=.5, y = 1, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  geom_text(label="textstyle('interaction:')~italic('p')~'<' ~.001", x=.5, y = 0.7, # 
+            color="black", hjust=0, show.legend = F, parse = T) +
+  theme(legend.position="none", #c(.5, .0975),
+        legend.direction = "horizontal",
+        legend.margin = margin(t = 0, unit='cm'),
+        axis.title.x = element_blank()) +
+  NULL
+```
+
+```{r}
+plot_1c3
+```
+
+### Combination
+```{r}
+plot_1c <- ggarrange(plot_1c1, plot_1c2, plot_1c3,
+                     nrow = 1)
+plot_1c
+```
+
+
+## Combined figure
+```{r fig.width=4.5, fig.height=3.2}
+plot1<- ggarrange(ggarrange(plot_1a, plot_1b,
+          labels = c("A", "B"),
+          ncol = 2,
+          widths = c(1,2)),
+          plot_1c, 
+          nrow = 2, labels = c("", "C"),
+          common.legend = T)
+plot1
+```
+
+
+```{r}
+ggsave("figure1.png", plot1, width=9.5, height = 6.4)
+```
+
+
+
+# Session information
+```{r}
+sessionInfo()
+```
+
+
+```{r}
+# ggsave(file=here::here("images", "inter_simple_sig.png", width = 7.2, height = 5.4)
+```
+

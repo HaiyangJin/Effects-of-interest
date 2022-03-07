@@ -4,7 +4,7 @@
 sim_train <- function(pre, delta, std, dvname, logrt=FALSE, N_subj=30, rho=0.5, seed=2022){
   
   # pre: mean of pre-test performance (assuming the same for the two groups);
-  # delta: the change from pre- to post-tests;
+  # delta: the change from pre- to post-tests (control, train);
   # std: the same standard deviation were used for all conditions;
   # dvname: the name of the dependent variable;
   # N_subj: number of participant in each group;
@@ -19,10 +19,14 @@ sim_train <- function(pre, delta, std, dvname, logrt=FALSE, N_subj=30, rho=0.5, 
   C <- matrix(rho, nrow = 2, ncol = 2)
   diag(C) <- 1
   
+  if (length(pre)==1){
+    pre = rep(pre, 1, 2)
+  }
+  
   post <- delta + pre
   
-  control <- mvtnorm::rmvnorm(N_subj, c(pre, post[1]), sigma = C*std^2)
-  train <- mvtnorm::rmvnorm(N_subj, c(pre, post[2]), sigma = C*std^2)
+  control <- mvtnorm::rmvnorm(N_subj, c(pre[1], post[1]), sigma = C*std^2)
+  train <- mvtnorm::rmvnorm(N_subj, c(pre[2], post[2]), sigma = C*std^2)
   
   df_sim <- rbind(control, train) %>% 
     as_tibble() %>% 

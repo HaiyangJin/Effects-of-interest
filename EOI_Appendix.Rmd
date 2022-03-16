@@ -151,14 +151,14 @@ A 2 $\times$ 2 mixed-ANOVA was first performed on sensitivity _d_':
 d_aov <- aov_4(d ~ Group * Test + (Test | Subj), df_d)
 ```
 
-The results were not displayed as none of these effects could test the directional effects specified in EOI directly. Thus, we first tested that simple effect (i.e., post-test vs. pre-test in the training group):
+The results were not displayed as none of these effects could test the directional effects specified in EOI directly. Thus, we first tested that simple effect (i.e., post-test vs. pre-test in the training group) with the one-tailed test:
 
 ```{r echo=TRUE}
 d_emm <- emmeans(d_aov, ~ Group + Test)
 summary(contrast(d_emm, "revpairwise", by="Group")[2], side = ">", infer=T)
 ```
 
-The above result showed that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group):
+The above result showed that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group) with the one-tailed test:
 
 ```{r echo=TRUE}
 summary(contrast(d_emm, interaction="revpairwise"), side = ">", infer=T)
@@ -173,14 +173,14 @@ A similar 2 $\times$ 2 mixed-ANOVA was performed on RT:
 logrt_aov <- aov_4(logrt ~ Group * Test + (Test | Subj), df_rt)
 ```
 
-Next, we tested one that simple effect (i.e., post-test vs. pre-test in the training group):
+Next, we tested that simple effect (i.e., post-test vs. pre-test in the training group) with the one-tailed test:
 
 ```{r echo=TRUE}
 logrt_emm <- emmeans(logrt_aov, ~ Group + Test)
 summary(contrast(logrt_emm, "revpairwise", by="Group")[2], side = "<", infer=T)
 ```
 
-This result showed that RT in post-test was shorter than the pre-test in the training group. Next, we examined the two-way interaction (i.e., the decrease of RT in the training group relative to the control group):
+This result showed that RT in post-test was shorter than the pre-test in the training group. Next, we examined the two-way interaction (i.e., the decrease of RT in the training group relative to the control group) with the one-tailed test:
 
 ```{r echo=TRUE}
 summary(contrast(logrt_emm, interaction="revpairwise"), side = "<", infer=T)
@@ -189,9 +189,9 @@ The magnitude of the RT decrease was not significantly greater in the training r
 
 In summary, with the results of both _d_' and RT as specified in EOI, we may claim that the training protocol was effective.
 
-# (Re-)analyze the simulated data with multilevel models
+# (Re-)analyze the simulated data with multilevel modeling
 
-Specifying EOI is not specific to any statistical method. Appendix A demonstrated how to employ ANOVA to inspect EOI. In this appendix, multilevel models (also known as linear-mixed effects models or hierarchical models) are used to inspect the same EOI with the same simulated data sets. Following the analysis in Appendix A, behavioral choices were also analyzed with signal detection theory (sensitivity _d_') and RT was analyzed with log-normal transformation. Of note, it is typically more beneficial to perform multilevel models on the trial-level data and incorporate the full random-effect structure. For simplicity, multilevel models employed in this appendix will only incorporate the by-subject random intercept and be performed on the condition means for each participant. Anyhow, this simplification would not invalidate the following demonstration. Please refer to the open materials of @jinTwoFacesHolistic for more appropriate applications of multilevel models with signal detection theory and log-transformation.
+Specifying EOI is not specific to any statistical method. Appendix A demonstrated how to employ ANOVA to inspect EOI. In this appendix, multilevel modeling (also known as linear mixed-effects modeling or hierarchical modeling) is used to inspect the same EOI with the same simulated data sets. Following the analysis in Appendix A, behavioral choices were also analyzed with signal detection theory (sensitivity _d_') and RT was analyzed with log-normal transformation. Of note, it is typically more beneficial to perform multilevel modeling on the trial-level data and incorporate the full random-effect structure. For simplicity, multilevel modeling employed in this appendix will only incorporate the by-subject random intercept and be performed on the condition means for each participant. Anyhow, this simplification would not invalidate the following demonstration. Please refer to the open materials of @jinTwoFacesHolistic for more appropriate applications of multilevel modeling with signal detection theory and log-transformation.
 
 ## Sensitivity d'
 
@@ -210,14 +210,14 @@ d_lmm <- lmer(d ~ Group * Test + (1 | Subj), data = df_d_lmm)
 round(summary(d_lmm)$coefficients, 3)
 ```
 
-These results suggest that in the training group, the _d_' in the pre-test was worse than that in the post-test (results of `Testpre`) and the increase of _d_' in the training group was greater than the control group (results of `Groupcontrol:Testpre`). Noteworthy that these results (mainly the p-values) were from two-sided tests. Since the effects in EOI we specified were directional, we might use one-sided instead of two-sided tests. For example, we might use a t-value of 1.65 instead of 1.96 as the threshold to claim statistical significance when $\alpha$ of 5% is employed. Alternatively, `library(emmeans)` could be used to perform the one-side tests, similar to Appendix A. 
+These results suggest that in the training group, the _d_' in the pre-test was worse than that in the post-test (results of `Testpre`) and the increase of _d_' in the training group was greater than the control group (results of `Groupcontrol:Testpre`). Noteworthy that these results (mainly the p-values) were from two-tailed tests. Since the effects in EOI we specified were directional, we might use one-tailed instead of two-tailed tests. For example, we might use a t-value of 1.65 instead of 1.96 as the threshold to claim statistical significance when $\alpha$ of 5% is employed. Alternatively, `library(emmeans)` could be used to perform the one-tailed test, similar to Appendix A. 
 
 ```{r echo=TRUE}
 d_lmm_emm <- emmeans(d_lmm, ~ Group + Test)
 summary(contrast(d_lmm_emm, "pairwise", by="Group")[1], side = ">", infer=T)
 ```
 
-The above result showed that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group):
+The above result showed that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group) with the one-tailed test:
 
 ```{r echo=TRUE}
 summary(contrast(d_lmm_emm, interaction="pairwise"), side = ">", infer=T)
@@ -241,14 +241,14 @@ logrt_lmm <- lmer(logrt ~ Group * Test + (1 | Subj), data = df_rt_lmm)
 round(summary(logrt_lmm)$coefficients, 3)
 ```
 
-Note that the above results were from two-sided tests. Therefore, we used `library(emmeans)` to perform the one-side tests. 
+Note that the above results were from two-tailed tests. Therefore, we used `library(emmeans)` to perform the one-tailed test. 
 
 ```{r echo=TRUE}
 logrt_lmm_emm <- emmeans(logrt_lmm, ~ Group + Test)
 summary(contrast(logrt_lmm_emm, "pairwise", by="Group")[1], side = "<", infer=T)
 ```
 
-This result showed that the _d_' of the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction:
+This result showed that the _d_' of the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction with the one-tailed test:
 
 ```{r echo=TRUE}
 summary(contrast(logrt_lmm_emm, interaction="pairwise"), side = "<", infer=T)
@@ -258,7 +258,7 @@ We failed to observe the evidence that the decrease of RT in the training group 
 
 # Conclusion-based Type I error rate in the hypothetical training study
 
-The CBER in the hypothetical training study refereed to the probability of concluding the training effectiveness when the statistical null hypotheses for all the tests specified in EOI were true. CBER was estimated with following simulation.
+The CBER in the hypothetical training study refereed to the probability of concluding the training effectiveness when the statistical null hypotheses for all the tests specified in EOI were true. CBER in the hypothetical study was estimated with following simulation.
 
 ```{r}
 # simulate null data set and calculate the p-values for single test

@@ -82,7 +82,7 @@ plot_1a <- as_tibble(d_emm_1a) %>%
   coord_cartesian(ylim = c(0, 4)) +
   labs(y=expression("Sensitivity"~italic("d'")), 
        color="Group", linetype="Group") +
-  geom_text(label="textstyle('simple effect:')~italic('p')~'='~.12", x=.5, y = 1, # 
+  geom_text(label="simple~effect[' train']:italic('p')~'='~.12", x=.5, y = 1, # 
             color="black", hjust=0, show.legend = F, parse = T) +
   geom_text(label="textstyle('interaction:')~italic('p')~'='~.03", x=.5, y = 0.7, # 
             color="black", hjust=0, show.legend = F, parse = T) +
@@ -132,7 +132,7 @@ plot_1b_d <- as_tibble(d_emm_1b) %>%
   coord_cartesian(ylim = c(0, 4)) +
   labs(x="Test", y=expression("Sensitivity"~italic("d'")), 
        color="Group", linetype="Group") +
-  geom_text(label="textstyle('simple effect:')~italic('p')~'<'~.001", x=.5, y = 1, # 
+  geom_text(label="simple~effect[' train']:italic('p')~'<'~.001", x=.5, y = 1, # 
             color="black", hjust=0, show.legend = F, parse = T) +
   geom_text(label="textstyle('interaction:')~italic('p')~'<'~.001", x=.5, y = 0.7, # 
             color="black", hjust=0, show.legend = F, parse = T) +
@@ -182,7 +182,7 @@ plot_1b_rt <- as_tibble(rt_emm_1b) %>%
   coord_cartesian(ylim = c(450, 650)) +
   labs(x="Test", y="Correct response times (ms)", 
        color="Group", linetype="Group") +
-  geom_text(label="textstyle('simple effect:')~italic('p')~'<'~.001", x=.5, y = 500, # 
+  geom_text(label="simple~effect[' train']:italic('p')~'<'~.001", x=.5, y = 500, # 
             color="black", hjust=0, show.legend = F, parse = T) +
   geom_text(label="textstyle('interaction:')~italic('p')~ '=' ~.32", x=.5, y = 485, # 
             color="black", hjust=0, show.legend = F, parse = T) +

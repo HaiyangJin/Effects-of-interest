@@ -1,6 +1,6 @@
 ---
-title             : 'Appendices for "The necessity of (pre-)specifying effects of interest in identifying robust phenomena for theory construction"'
-shorttitle         : "(Pre-)specifiying effects of interest"
+title             : 'Appendices for "The necessity of pre-specifying effects of interest in identifying robust phenomena for theory construction"'
+shorttitle         : "Pre-specifiying effects of interest"
 
 author: 
   - name: "Haiyang Jin"
@@ -14,7 +14,7 @@ affiliation:
     institution   : ""
   
 authornote        : |
-  This is the appendices for "The necessity of (pre-)specifying effects of interest in identifying robust phenomena for theory construction".
+  This is the appendices for "The necessity of pre-specifying effects of interest in identifying robust phenomena for theory construction".
 keywords          : "effects of interest; conclusion credibility; robust phenomena"
 wordcount         : "X"
 
@@ -91,15 +91,15 @@ my_citations <- cite_r(file = "references/r-references.bib")
 
 \appendix
 
-# (Pre-)specifying effects of interest in practice
+# Pre-specifying effects of interest in practice
 
 ## A hypothetical study
 
-The aim of this hypothetical training study was to test whether the training protocol was effective in improving participants' ability of recognizing other-race faces. A 2 (Group: `train` vs. `control`; between-subject factor) $\times$ 2 (Test: `pre-test` vs. `post-test`; within-subject factor) mixed design was employed. The dependent variables included both the behavioral choices and correct response times. Specifically, behavioral choices were analyzed with sensitivity _d_' in signal detection theory, and correct response times (RT) were analyzed with log-normal transformation. Please refer to the main text for more details.
+The hypothetical training study aimed to test whether the training protocol was effective in improving participants' ability of recognizing other-race faces. A 2 (Group: `train` vs. `control`; between-subject factor) $\times$ 2 (Test: `pre-test` vs. `post-test`; within-subject factor) mixed design was employed. The dependent variables included both the behavioral choices and correct response times. Specifically, behavioral choices were analyzed with sensitivity _d_' in signal detection theory, and correct response times (RT) were analyzed with log-normal transformation. Please refer to the main text for more details.
 
 ## Data simulation
 
-To demonstrate how to (pre-)specify effects of interest (EOI) in practice, data sets were simulated for behavioral choices and response times separately. There were 30 participants in each group. For simplicity, the performance of each condition for each participant was simulated directly. Please refer to the open materials for detailed simulation procedures. Table \@ref(tab:simu-true) displays the ground truth for each condition. The structure of the simulated data _d_' is:
+To demonstrate how to pre-specify effects of interest (EOI) in practice, data sets were simulated for behavioral choices and response times separately. There were 30 participants in each group. For simplicity, the performance of each condition for each participant was simulated directly. Please refer to the open materials (https://osf.io/yhm3s/) for detailed simulation procedures. Table \@ref(tab:simu-true) displays the ground truth for each condition. The structure of the simulated data _d_' is:
 ```{r}
 d_pre <- 2.5
 d_delta <- c(0.4, 0.9) # control, train
@@ -151,17 +151,17 @@ A 2 $\times$ 2 mixed-ANOVA was first performed on sensitivity _d_':
 d_aov <- aov_4(d ~ Group * Test + (Test | Subj), df_d)
 ```
 
-The results were not displayed as none of these effects could test the directional effects specified in EOI directly. Thus, we first tested that simple effect (i.e., post-test vs. pre-test in the training group) with the one-tailed test:
+The results were not displayed as none of these effects could test the directional effects specified in EOI. Thus, we first tested that simple effect (i.e., post-test vs. pre-test in the training group) with the one-tailed test:
 
 ```{r echo=TRUE}
 d_emm <- emmeans(d_aov, ~ Group + Test)
-summary(contrast(d_emm, "revpairwise", by="Group")[2], side = ">", infer=T)
+summary(contrast(d_emm, "revpairwise", by="Group")[2], side=">", infer=T)
 ```
 
 The above result showed that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group) with the one-tailed test:
 
 ```{r echo=TRUE}
-summary(contrast(d_emm, interaction="revpairwise"), side = ">", infer=T)
+summary(contrast(d_emm, interaction="revpairwise"), side=">", infer=T)
 ```
 This result showed that the increase of _d_' from pre- to post-test was significantly greater in the training group relative to the control group. 
 
@@ -177,31 +177,31 @@ Next, we tested that simple effect (i.e., post-test vs. pre-test in the training
 
 ```{r echo=TRUE}
 logrt_emm <- emmeans(logrt_aov, ~ Group + Test)
-summary(contrast(logrt_emm, "revpairwise", by="Group")[2], side = "<", infer=T)
+summary(contrast(logrt_emm, "revpairwise", by="Group")[2], side="<", infer=T)
 ```
 
 This result showed that RT in post-test was shorter than the pre-test in the training group. Next, we examined the two-way interaction (i.e., the decrease of RT in the training group relative to the control group) with the one-tailed test:
 
 ```{r echo=TRUE}
-summary(contrast(logrt_emm, interaction="revpairwise"), side = "<", infer=T)
+summary(contrast(logrt_emm, interaction="revpairwise"), side="<", infer=T)
 ```
 The magnitude of the RT decrease was not significantly greater in the training relative to the control group. Therefore, the RT results did not provide evidence that the training was effective. Notably, this result did not suggest that the training protocol was not effective, neither.
 
 In summary, with the results of both _d_' and RT as specified in EOI, we may claim that the training protocol was effective.
 
-# (Re-)analyze the simulated data with multilevel modeling
+# Re-analyze the simulated data with multilevel modeling
 
 Specifying EOI is not specific to any statistical method. Appendix A demonstrated how to employ ANOVA to inspect EOI. In this appendix, multilevel modeling (also known as linear mixed-effects modeling or hierarchical modeling) is used to inspect the same EOI with the same simulated data sets. Following the analysis in Appendix A, behavioral choices were also analyzed with signal detection theory (sensitivity _d_') and RT was analyzed with log-normal transformation. Of note, it is typically more beneficial to perform multilevel modeling on the trial-level data and incorporate the full random-effect structure. For simplicity, multilevel modeling employed in this appendix will only incorporate the by-subject random intercept and be performed on the condition means for each participant. Anyhow, this simplification would not invalidate the following demonstration. Please refer to the open materials of @jinTwoFacesHolistic for more appropriate applications of multilevel modeling with signal detection theory and log-transformation.
 
 ## Sensitivity d'
 
-The same EOI would be inspected here: (1) _d_' in the post-test relative to the pre-test in the training group, and (2) the increase of _d_' in the training group relative to the control group. It happened that these two effects could be tested with the default dummy contrast coding in R when the default level in each factor was set appropriately.
+The same EOI would be inspected here: (1) _d_' in the post-test relative to the pre-test in the training group, and (2) the increase of _d_' in the training group relative to the control group. It happened that these two effects could be tested with the default dummy contrast coding when the default level in each factor was set appropriately.
 
-```{r}
+```{r, echo=T}
 # set the level order for each factor
 df_d_lmm <- df_d %>% 
-  mutate(Test = factor(Test, levels=c("post", "pre")), # pre is the first level 
-         Group = factor(Group, levels=c("train", "control"))) # control is the first level
+  mutate(Test = factor(Test, levels=c("post", "pre")), 
+         Group = factor(Group, levels=c("train", "control")))
 ```
 
 The hierarchical model for _d_' was:
@@ -210,17 +210,17 @@ d_lmm <- lmer(d ~ Group * Test + (1 | Subj), data = df_d_lmm)
 round(summary(d_lmm)$coefficients, 3)
 ```
 
-These results suggest that in the training group, the _d_' in the pre-test was worse than that in the post-test (results of `Testpre`) and the increase of _d_' in the training group was greater than the control group (results of `Groupcontrol:Testpre`). Noteworthy that these results (mainly the p-values) were from two-tailed tests. Since the effects in EOI we specified were directional, we might use one-tailed instead of two-tailed tests. For example, we might use a t-value of 1.65 instead of 1.96 as the threshold to claim statistical significance when $\alpha$ of 5% is employed. Alternatively, `library(emmeans)` could be used to perform the one-tailed test, similar to Appendix A. 
+These results suggest that in the training group, the _d_' in the pre-test was worse than that in the post-test (results of `Testpre`) and the increase of _d_' in the training group was greater than the control group (results of `Groupcontrol:Testpre`). Noteworthy that these results (mainly the p-values) were from two-tailed tests. Since the effects specified in EOI were directional, we might use one-tailed instead of two-tailed tests. For example, we might use a t-value of 1.65 instead of 1.96 as the threshold to claim statistical significance when $\alpha$ of 5% is employed. Alternatively, `library(emmeans)` could be used to perform the one-tailed test, similar to Appendix A. 
 
 ```{r echo=TRUE}
 d_lmm_emm <- emmeans(d_lmm, ~ Group + Test)
-summary(contrast(d_lmm_emm, "pairwise", by="Group")[1], side = ">", infer=T)
+summary(contrast(d_lmm_emm, "pairwise", by="Group")[1], side=">", infer=T)
 ```
 
 The above result showed that the _d_' in the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction (i.e., the increase of _d_' in the training group relative to the control group) with the one-tailed test:
 
 ```{r echo=TRUE}
-summary(contrast(d_lmm_emm, interaction="pairwise"), side = ">", infer=T)
+summary(contrast(d_lmm_emm, interaction="pairwise"), side=">", infer=T)
 ```
 
 This result showed that the increase of _d_' in the training group was significantly greater than that in the control group.
@@ -245,20 +245,20 @@ Note that the above results were from two-tailed tests. Therefore, we used `libr
 
 ```{r echo=TRUE}
 logrt_lmm_emm <- emmeans(logrt_lmm, ~ Group + Test)
-summary(contrast(logrt_lmm_emm, "pairwise", by="Group")[1], side = "<", infer=T)
+summary(contrast(logrt_lmm_emm, "pairwise", by="Group")[1], side="<", infer=T)
 ```
 
 This result showed that the _d_' of the post-test was significantly better than the pre-test in the training group. Next, we tested the two-way interaction with the one-tailed test:
 
 ```{r echo=TRUE}
-summary(contrast(logrt_lmm_emm, interaction="pairwise"), side = "<", infer=T)
+summary(contrast(logrt_lmm_emm, interaction="pairwise"), side="<", infer=T)
 ```
 
 We failed to observe the evidence that the decrease of RT in the training group was larger than the control group. With results of both _d_' and RT, we may claim that the training was effective. 
 
 # Conclusion-based Type I error rate in the hypothetical training study
 
-The CBER in the hypothetical training study refereed to the probability of concluding the training effectiveness when the statistical null hypotheses for all the tests specified in EOI were true. CBER in the hypothetical study was estimated with following simulation.
+The CBER in the hypothetical training study refereed to the probability of concluding the training effectiveness when the statistical null hypotheses for all the tests specified in EOI were true. CBER in the hypothetical training study was estimated with following simulation.
 
 ```{r}
 # simulate null data set and calculate the p-values for single test
@@ -274,9 +274,9 @@ df_typeI_train <- sim_train_cber(df_sim_null, 0.05) %>%
             Type_I_or = mean(sig_d_or_rt))
 ```
 
-In each of 10,000 iterations, one null data set for _d_' and one for RT were simulated separately for 30 participants. Then a mixed-ANOVA, in which the procedure was identical to the steps in Appendix A, was performed on _d_' and RT separately, where the same simple effect and the two-way interaction were inspected. The simulation codes are available in the open materials. The simulation results showed that the CBER for concluding training effectiveness is `r df_typeI_train$Type_I_or*100`% when the $\alpha$ of 5% was applied at the single test level.
+In each of 10,000 iterations, one null data set for _d_' and one for RT were simulated separately for 30 participants. Then a mixed-ANOVA, in which the procedure was identical to the steps in Appendix A, was performed on _d_' and RT separately, where the same simple effect and the two-way interaction were inspected. The simulation codes are available in the open materials (https://osf.io/yhm3s/). The simulation results showed that the CBER for concluding training effectiveness is `r df_typeI_train$Type_I_or*100`% when the $\alpha$ of 5% was applied at the single test level.
 
-Next, simulation was employed to explore the relationships between the $\alpha$ applied at the the single test level and the corresponding Type I error rates at the single test and dependent variable levels, as well as the CBER. Specifically, the same procedure was repeated for varied sample sizes (30, 50, 75, 100, 150, 200, or 300) with 5,000 iterations for each. Results (Figure \@ref(fig:simu-cber) and Table \@ref(tab:sim-cber-Ns)) revealed similar patterns for different sample sizes (as indicated by the slightly transparent lines). First, the Type I error rates for single tests, including the simple effect and the two-way interaction for both _d_' and RT, matched the applied $\alpha$, as shown by yellow (_d_') and blue (RT) dotted lines. For example, with the $\alpha$ of 5%, the Type I error rate of single test is also about 5%. Second, the Conjunction Type I error rate, in which both the simple effect and interaction were significant at the same time when their corresponding statistical null hypotheses were true, for _d_' or RT is smaller than half of the $\alpha$, as shown by the yellow (_d_') and blue (RT) dashed lines. For instance, the Conjunction Type I error rate is about 1.8% with the conventional $\alpha$ of 5% for single tests. Last and most importantly, the CBER for concluding training effectiveness is smaller than the applied $\alpha$, as shown by the black solid lines. When the $\alpha$ of 6.6% (as indicated by the vertical dashed line) is applied to single tests, the CBER for claiming the training effectiveness is about 5%. 
+Next, simulation was employed to explore the relationships between the $\alpha$ applied at the the single test level and the corresponding Type I error rates at the single test and dependent variable levels, as well as at the conclusion level. Specifically, the same procedure was repeated for varied sample sizes (30, 50, 75, 100, 150, 200, or 300) with 5,000 iterations for each. Results (Figure \@ref(fig:simu-cber) and Table \@ref(tab:sim-cber-Ns)) revealed similar patterns for different sample sizes (as indicated by the slightly transparent lines). First, the Type I error rates for single tests, including the simple effect and the two-way interaction for both _d_' and RT, matched the applied $\alpha$, as shown by yellow (_d_') and blue (RT) dotted lines. For example, with the $\alpha$ of 5%, the Type I error rate of single test is also about 5%. Second, the Conjunction Type I error rate, in which both the simple effect and interaction were significant at the same time when their corresponding statistical null hypotheses were true, for _d_' or RT is smaller than half of the $\alpha$, as shown by the yellow (_d_') and blue (RT) dashed lines. For instance, the Conjunction Type I error rate is about 1.8% with the conventional $\alpha$ of 5% for single tests. Last and most importantly, the CBER for concluding training effectiveness is smaller than the applied $\alpha$, as shown by the black solid lines. When the $\alpha$ of 6.6% (as indicated by the vertical dashed line) is applied to single tests, the CBER for claiming the training effectiveness is about 5%. 
 
 ```{r}
 # simulate null data with varied sample sizes
@@ -290,7 +290,7 @@ df_sim_null_Ns <- sim_train_null(
 ```{r sim-cber-Ns}
 sim_train_cber(df_sim_null_Ns, 0.05) %>% 
   group_by(N_subj) %>%
-  summarize(N_subj = printnum(N_subj, digits=0),
+  summarize(N = printnum(N_subj, digits=0),
             d_simple = printnum(mean(sig_d_simple), digits=3),
             d_interaction = printnum(mean(sig_d_inter), digits=3),
             rt_simple = printnum(mean(sig_rt_simple), digits=3),
@@ -298,11 +298,12 @@ sim_train_cber(df_sim_null_Ns, 0.05) %>%
             d_both = printnum(mean(sig_d_both), digits=3), 
             rt_both = printnum(mean(sig_rt_both), digits=3), 
             CBER = printnum(mean(sig_d_or_rt), digits=3)) %>% 
-  apa_table(caption='Conclusion-based and other Type I error rates',
-            note='Type I error rates at different levels for varied sample sizes.')
+  select(-N_subj) %>% 
+  apa_table(caption='Conclusion-based and other Type I error rates with the alpha of 0.05.',
+            note='Type I error rates at different levels for simulation with varied sample sizes. N denotes the number of participants. Columns starting with "d" or "RT" display the results for sensitivity d and response times separately. Columns ending with "simple" denote the comparisons between pre- and post-test in the training group. Columns ending with "interaction" denote the comparison of performance changes (i.e., post-test relative to pre-test) between the training and control groups. Columns ending with "both" denote the Type I error rate when both the simple effect and interaction were significant at the same time for that dependent variable. CBER refers to the conclusion-based Type I error rate, i.e., the EOI.')
 ```
 
-(ref:simu-cber-caption) Conclusion-based and other Type I error rates with varied $\alpha$ for single tests in the hypothetical training study. Similar results were obtained for different sample sizes (as indicated by slightly transparent lines). (1) The dotted lines display that the Type I error rates for single tests match the corresponding $\alpha$ (_d_': yellow; RT: blue). (2) The dashed lines show that the Conjunction Type I error rate (CER) for _d_' (yellow) or RT (blue) was smaller than half of the $\alpha$ for single tests. (3) The solid lines display the relationships between the CBER and $\alpha$ for single tests. Specifically, the CBER is about 5% when $\alpha$ of 6.6% is applied to single tests, as indicated by the vertical dashed line. 
+(ref:simu-cber-caption) Conclusion-based and other Type I error rates with varied $\alpha$ for single tests in the hypothetical training study. Similar results were obtained for different sample sizes (as indicated by slightly transparent lines). (1) The dotted lines display that the Type I error rates for single tests match the corresponding $\alpha$ (_d_': yellow; RT: blue). (2) The dashed lines show that the Conjunction Type I error rate (CER) for _d_' (yellow) or RT (blue) is smaller than half of the $\alpha$ for single tests. (3) The solid lines display the relationships between the CBER and $\alpha$ for single tests. Specifically, the CBER is about 5% when $\alpha$ of 6.6% is applied to single tests, as indicated by the vertical dashed line. 
 
 ```{r simu-cber, fig.asp=.75, fig.cap="(ref:simu-cber-caption)"}
 alpha_ls <- c(.3, .2, .15, .1, .05, .01, .001, .0001)

@@ -1,7 +1,8 @@
-# Supplementary materials for "(Pre-)specifying effects of interest"
+# Pre-specifying effects of interest
 
-This repository stores the supplementary materials for the EOI paper.
+This repository stores the online materials for the paper entitled "**Pre-specifying effects of interest: necessary practice to clarify conclusion credibility in individual research.**"
+ 
+`EOI_Appendix.Rmd` stores the codes for creating the appendices.   
+`EOI_figure.Rmd` stores the codes for creating the Figure 1 in the main texts.
 
-`EOI_Appendix.Rmd` stores the codes for creating appendices. 
-
-The open materials can be found: (TBD). 
+The open materials can be found at https://osf.io/uy5ds/. 
